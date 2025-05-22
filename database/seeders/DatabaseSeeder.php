@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Models\Account;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -15,9 +16,21 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        $user = User::factory()->create([
+            'name' => 'bro',
+            'email' => 'b@b.com',
+            'password' => 'password',
         ]);
+
+        // Create accounts for the user
+        $accounts = [
+            ['name' => 'Chequing'],
+            ['name' => 'Savings'],
+            ['name' => 'Credit Card'],
+        ];
+
+        foreach ($accounts as $account) {
+            $user->accounts()->create($account);
+        }
     }
 }
