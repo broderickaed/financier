@@ -5,23 +5,35 @@ namespace App\Http\Controllers;
 use App\Models\Account;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Illuminate\Support\Facades\Gate;
+
 class AccountController extends Controller
 {
     public function index(Request $request)
     {
+        if ($request->user()->cannot('viewAny', Account::class)) {
+            abort(403);
+        }
+
         return Inertia::render('Accounts/Index', [
             'accounts' => $request->user()->accounts()->latest()->get()
         ]);
     }
 
-    public function create()
+    public function create(Request $request)
     {
+        if ($request->user()->cannot('create', Account::class)) {
+            abort(403);
+        }
+
         return Inertia::render('Accounts/Create');
     }
 
     public function store(Request $request)
     {
+        if ($request->user()->cannot('create', Account::class)) {
+            abort(403);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
         ]);
@@ -31,23 +43,29 @@ class AccountController extends Controller
         return redirect()->route('accounts.index');
     }
 
-    public function show(Account $account)
+    public function show(Request $request, Account $account)
     {
-        Gate::authorize('view', $account);
+        if ($request->user()->cannot('view', $account)) {
+            abort(403);
+        }
 
         return Inertia::render('Accounts/Show', ['account' => $account]);
     }
 
-    public function edit(Account $account)
+    public function edit(Request $request, Account $account)
     {
-        Gate::authorize('update', $account);
+        if ($request->user()->cannot('update', $account)) {
+            abort(403);
+        }
 
         return Inertia::render('Accounts/Edit', ['account' => $account]);
     }
 
     public function update(Request $request, Account $account)
     {
-        Gate::authorize('update', $account);
+        if ($request->user()->cannot('update', $account)) {
+            abort(403);
+        }
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -58,9 +76,11 @@ class AccountController extends Controller
         return redirect()->route('accounts.index');
     }
 
-    public function destroy(Account $account)
+    public function destroy(Request $request, Account $account)
     {
-        Gate::authorize('delete', $account);
+        if ($request->user()->cannot('delete', $account)) {
+            abort(403);
+        }
 
         $account->delete();
 

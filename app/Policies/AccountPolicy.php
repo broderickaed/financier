@@ -13,7 +13,8 @@ class AccountPolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        // Users can view their list of accounts
+        return true;
     }
 
     /**
@@ -21,7 +22,8 @@ class AccountPolicy
      */
     public function view(User $user, Account $account): bool
     {
-        return false;
+        // Users can only view their own accounts
+        return $user->id === $account->user_id;
     }
 
     /**
@@ -29,25 +31,26 @@ class AccountPolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        // Any authenticated user can create accounts
+        return true;
     }
 
     /**
      * Determine whether the user can update the model.
      */
-        public function update(User $user, Account $account)
-        {
-            return $user->id === $account->user_id;
-        }
-    
-    
+    public function update(User $user, Account $account): bool
+    {
+        // Users can only update their own accounts
+        return $user->id === $account->user_id;
+    }
 
     /**
      * Determine whether the user can delete the model.
      */
     public function delete(User $user, Account $account): bool
     {
-        return false;
+        // Users can only delete their own accounts
+        return $user->id === $account->user_id;
     }
 
     /**
@@ -55,7 +58,8 @@ class AccountPolicy
      */
     public function restore(User $user, Account $account): bool
     {
-        return false;
+        // Users can only restore their own accounts
+        return $user->id === $account->user_id;
     }
 
     /**
@@ -63,6 +67,7 @@ class AccountPolicy
      */
     public function forceDelete(User $user, Account $account): bool
     {
-        return false;
+        // Users can only force delete their own accounts
+        return $user->id === $account->user_id;
     }
 }

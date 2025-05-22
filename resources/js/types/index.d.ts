@@ -41,3 +41,15 @@ export interface User {
     updated_at: string;
     [key: string]: unknown; // This allows for additional properties...
 }
+
+export interface PageProps<T = {}> {
+    auth: {
+        user: User;
+    };
+    flash?: {
+        success?: string;
+        error?: string;
+    };
+    // Extend with page-specific props
+    data?: T;
+}
