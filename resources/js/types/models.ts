@@ -5,13 +5,15 @@ export interface Account {
     created_at: string;
     updated_at: string;
   }
-  
-  export interface Expense {
+  export interface Transaction {
     id: number;
-    name: string;
-    date: string;
-    amount: number; // stored as cents (integer)
     user_id: number;
+    account_id: number;
+    related_transaction_id: number | null;
+    date: string;
+    description: string;
+    amount: number;
+    type: string;
     created_at: string;
     updated_at: string;
-}
+  }

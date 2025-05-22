@@ -1,8 +1,8 @@
 <?php
 
 use App\Http\Controllers\AccountController; 
-use App\Http\Controllers\ExpenseController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TransactionController;
+use Illuminate\Support\Facades\Route;   
 use Inertia\Inertia;
 
 Route::get('/', function () {
@@ -17,7 +17,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/config', function () {
         return Inertia::render('Config/Index');
     })->name('config.index');
-    Route::resource('expenses', ExpenseController::class);
+    Route::resource('transactions', TransactionController::class);
 });
 
 require __DIR__.'/settings.php';

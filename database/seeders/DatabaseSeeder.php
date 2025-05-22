@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Models\Account;
+use Illuminate\Support\Facades\Hash;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -19,7 +20,7 @@ class DatabaseSeeder extends Seeder
         $user = User::factory()->create([
             'name' => 'bro',
             'email' => 'b@b.com',
-            'password' => 'password',
+            'password' => Hash::make('password'),
         ]);
 
         // Create accounts for the user
