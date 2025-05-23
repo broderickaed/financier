@@ -9,7 +9,7 @@ export interface Account {
     id: number;
     user_id: number;
     account_id: number;
-    related_transaction_id: number | null;
+    related_transaction_id?: number;
     date: string;
     description: string;
     amount: number;

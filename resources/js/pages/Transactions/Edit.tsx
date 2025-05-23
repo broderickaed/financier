@@ -7,9 +7,10 @@ import TransactionForm from './transactionForm';
 interface Props extends PageProps {
   accounts: Account[];
   transaction: Transaction;
+  relatedAccount?: Account;
 }
 
-export default function TransactionEdit({ accounts, transaction }: Props) {
+export default function TransactionEdit({ accounts, transaction, relatedAccount }: Props) {
   const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Transactions', href: '/transactions' },
     {
@@ -21,7 +22,7 @@ export default function TransactionEdit({ accounts, transaction }: Props) {
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Edit Transaction" />
-      <TransactionForm accounts={accounts} transaction={transaction} />
+      <TransactionForm accounts={accounts} transaction={transaction} relatedAccount={relatedAccount} />
     </AppLayout>
   );
 }

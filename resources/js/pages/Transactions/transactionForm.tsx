@@ -31,10 +31,12 @@ import type { Account, Transaction } from '@/types/models';
 
 export default function TransactionForm({
   accounts,
-  transaction
+  transaction,
+  relatedAccount
 }: {
   accounts: Account[];
   transaction?: Transaction;
+  relatedAccount?: Account;
 }) {
   const editing = !!transaction;
 
@@ -44,7 +46,7 @@ export default function TransactionForm({
     amount: transaction ? (transaction.amount / 100).toFixed(2) : '',
     type: transaction?.type || 'expense',
     account_id: transaction?.account_id?.toString() || '',
-    to_account_id: transaction?.to_account_id?.toString() || ''
+    related_account_id: relatedAccount?.id?.toString() || ''
   });
 
   const handleChange = <T extends keyof typeof data>(field: T, value: typeof data[T]) => {
@@ -61,7 +63,7 @@ export default function TransactionForm({
       amount: Math.round(parseFloat(data.amount) * 100),
       type: data.type,
       account_id: parseInt(data.account_id),
-      to_account_id: data.to_account_id ? parseInt(data.to_account_id) : undefined
+      related_account_id: data.related_account_id ? parseInt(data.related_account_id) : undefined
     };
 
     if (editing) {
@@ -196,14 +198,14 @@ export default function TransactionForm({
 
             {data.type === 'transfer' && (
               <div className="space-y-2">
-                <Label htmlFor="to_account_id">To Account</Label>
+                <Label htmlFor="related_account_id">Related Account</Label>
                 <Select
-                  value={data.to_account_id}
-                  onValueChange={(value) => handleChange('to_account_id', value)}
+                  value={data.related_account_id}
+                  onValueChange={(value) => handleChange('related_account_id', value)}
                   disabled={processing}
                 >
-                  <SelectTrigger id="to_account_id">
-                    <SelectValue placeholder="Select destination account" />
+                  <SelectTrigger id="related_account_id">
+                    <SelectValue placeholder="Select related account" />
                   </SelectTrigger>
                   <SelectContent>
                     {accounts.map((account) => (
@@ -213,8 +215,8 @@ export default function TransactionForm({
                     ))}
                   </SelectContent>
                 </Select>
-                {errors.to_account_id && (
-                  <p className="text-sm text-red-500">{errors.to_account_id}</p>
+                {errors.related_account_id && (
+                  <p className="text-sm text-red-500">{errors.related_account_id}</p>
                 )}
               </div>
             )}

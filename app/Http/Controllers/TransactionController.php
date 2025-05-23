@@ -39,10 +39,11 @@ class TransactionController extends Controller
             'amount' => ['required', 'integer', 'min:1'],
             'type' => ['required', 'in:income,expense,transfer'],
             'account_id' => ['required', 'exists:accounts,id'],
-            'to_account_id' => ['required_if:type,transfer', 'exists:accounts,id', 'different:account_id'],
+            'related_account_id' => ['required_if:type,transfer', 'exists:accounts,id', 'different:account_id'],
         ]);
         
         if ($validated['type'] === 'transfer') {
+            // Create withdrawal transaction
             $withdrawal = $request->user()->transactions()->create([
                 'account_id' => $validated['account_id'],
                 'date' => $validated['date'],
@@ -50,22 +51,22 @@ class TransactionController extends Controller
                 'amount' => -$validated['amount'],
                 'type' => 'transfer',
             ]);
-        
+
+            // Create deposit transaction
             $deposit = $request->user()->transactions()->create([
-                'account_id' => $validated['to_account_id'],
+                'account_id' => $validated['related_account_id'],
                 'date' => $validated['date'],
                 'description' => $validated['description'],
                 'amount' => $validated['amount'],
                 'type' => 'transfer',
                 'related_transaction_id' => $withdrawal->id,
             ]);
-        
+
             $withdrawal->update(['related_transaction_id' => $deposit->id]);
         } else {
             $request->user()->transactions()->create($validated);
         }
-        
-    
+
         return redirect()->route('transactions.index');
     }
     
@@ -85,7 +86,9 @@ class TransactionController extends Controller
     {
         if ($request->user()->cannot('update', $transaction)) {
             abort(403);
-        }        $accounts = request()->user()->accounts()->get();
+        }
+        
+        $accounts = request()->user()->accounts()->get();
 
         // For transfers, always show the withdrawal side (negative amount)
         if ($transaction->type === 'transfer' && $transaction->amount > 0) {
@@ -93,12 +96,12 @@ class TransactionController extends Controller
             $transaction = Transaction::find($transaction->related_transaction_id);
         }
 
-        // For transfers, get the to_account_id from the related transaction
-        $toAccountId = null;
+        // For transfers, get the related transaction's account
+        $relatedAccountId = null;
         if ($transaction->type === 'transfer' && $transaction->related_transaction_id) {
             $relatedTransaction = Transaction::find($transaction->related_transaction_id);
             if ($relatedTransaction) {
-                $toAccountId = $relatedTransaction->account_id;
+                $relatedAccountId = $relatedTransaction->account_id;
             }
         }
 
@@ -107,7 +110,7 @@ class TransactionController extends Controller
                 'amount' => abs($transaction->amount), // Send absolute value to form
             ]),
             'accounts' => $accounts,
-            'to_account_id' => $toAccountId,
+            'relatedAccount' => $accounts->find($relatedAccountId),
         ]);
     }
     
@@ -124,7 +127,7 @@ class TransactionController extends Controller
             'amount' => ['required', 'integer', 'min:1'],
             'type' => ['required', 'in:income,expense,transfer'],
             'account_id' => ['required', 'exists:accounts,id'],
-            'to_account_id' => ['required_if:type,transfer', 'exists:accounts,id', 'different:account_id'],
+            'related_account_id' => ['required_if:type,transfer', 'exists:accounts,id', 'different:account_id'],
         ]);
 
         // If this is the deposit side of a transfer, switch to the withdrawal side
@@ -155,7 +158,7 @@ class TransactionController extends Controller
                     'description' => $validated['description'],
                     'amount' => $validated['amount'],
                     'type' => 'transfer',
-                    'account_id' => $validated['to_account_id'],
+                    'account_id' => $validated['related_account_id'],
                 ]);
             } else {
                 $deposit = $request->user()->transactions()->create([
@@ -163,7 +166,7 @@ class TransactionController extends Controller
                     'description' => $validated['description'],
                     'amount' => $validated['amount'],
                     'type' => 'transfer',
-                    'account_id' => $validated['to_account_id'],
+                    'account_id' => $validated['related_account_id'],
                     'related_transaction_id' => $transaction->id,
                 ]);
                 $transaction->update(['related_transaction_id' => $deposit->id]);
