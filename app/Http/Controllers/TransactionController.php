@@ -37,7 +37,7 @@ class TransactionController extends Controller
             'date' => ['required', 'date'],
             'description' => ['required', 'string'],
             'amount' => ['required', 'integer', 'min:1'],
-            'type' => ['required', 'in:income,expense,transfer'],
+            'type' => ['required', 'in:income,expense,transfer,refund'],
             'account_id' => ['required', 'exists:accounts,id'],
             'related_account_id' => ['required_if:type,transfer', 'exists:accounts,id', 'different:account_id'],
         ]);
@@ -64,7 +64,20 @@ class TransactionController extends Controller
 
             $withdrawal->update(['related_transaction_id' => $deposit->id]);
         } else {
-            $request->user()->transactions()->create($validated);
+            // For non-transfer transactions, adjust the sign based on type
+            $amount = $validated['amount'];
+            if ($validated['type'] === 'expense') {
+                $amount = -$amount;
+            }
+            // refund and income will keep the positive amount
+            
+            $request->user()->transactions()->create([
+                'date' => $validated['date'],
+                'description' => $validated['description'],
+                'amount' => $amount,
+                'type' => $validated['type'],
+                'account_id' => $validated['account_id'],
+            ]);
         }
 
         return redirect()->route('transactions.index');
@@ -125,7 +138,7 @@ class TransactionController extends Controller
             'date' => ['required', 'date'],
             'description' => ['required', 'string'],
             'amount' => ['required', 'integer', 'min:1'],
-            'type' => ['required', 'in:income,expense,transfer'],
+            'type' => ['required', 'in:income,expense,transfer,refund'],
             'account_id' => ['required', 'exists:accounts,id'],
             'related_account_id' => ['required_if:type,transfer', 'exists:accounts,id', 'different:account_id'],
         ]);
@@ -181,11 +194,18 @@ class TransactionController extends Controller
                 $transaction->related_transaction_id = null;
             }
 
+            // For non-transfer transactions, adjust the sign based on type
+            $amount = $validated['amount'];
+            if ($validated['type'] === 'expense') {
+                $amount = -$amount;
+            }
+            // refund and income will keep the positive amount
+
             // Update as a regular transaction
             $transaction->update([
                 'date' => $validated['date'],
                 'description' => $validated['description'],
-                'amount' => $validated['type'] === 'expense' ? -$validated['amount'] : $validated['amount'],
+                'amount' => $amount,
                 'type' => $validated['type'],
                 'account_id' => $validated['account_id'],
             ]);

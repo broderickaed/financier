@@ -170,6 +170,7 @@ export default function TransactionForm({
                   <SelectItem value="income">Income</SelectItem>
                   <SelectItem value="expense">Expense</SelectItem>
                   <SelectItem value="transfer">Transfer</SelectItem>
+                  <SelectItem value="refund">Refund</SelectItem>
                 </SelectContent>
               </Select>
               {errors.type && <p className="text-sm text-red-500">{errors.type}</p>}

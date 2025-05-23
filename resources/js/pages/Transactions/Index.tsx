@@ -59,7 +59,7 @@ export default function TransactionIndex({ transactions }: Props) {
                     <TableCell>{tx.date}</TableCell>
                     <TableCell>{tx.description}</TableCell>
                     <TableCell>{tx.type}</TableCell>
-                    <TableCell className=" font-medium">
+                    <TableCell className={`font-medium ${tx.amount < 0 ? 'text-red-600' : 'text-green-600'}`}>
                       ${(tx.amount / 100).toFixed(2)}
                     </TableCell>
                     <TableCell>{tx.account?.name}</TableCell>
