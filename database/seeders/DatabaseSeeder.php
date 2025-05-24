@@ -26,14 +26,14 @@ class DatabaseSeeder extends Seeder
         event(new Registered($user));
 
         // Create accounts for the user
-        $accounts = [
-            ['name' => 'Chequing'],
-            ['name' => 'Savings'],
-            ['name' => 'Credit Card'],
-        ];
+        // $accounts = [
+        //     ['name' => 'Chequing'],
+        //     ['name' => 'Savings'],
+        //     ['name' => 'Credit Card'],
+        // ];
 
-        foreach ($accounts as $account) {
-            $user->accounts()->create($account);
-        }
+        // foreach ($accounts as $account) {
+        //     $user->accounts()->create($account);
+        // }
     }
 }

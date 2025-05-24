@@ -49,6 +49,7 @@ export interface PageProps<T = {}> {
     flash?: {
         success?: string;
         error?: string;
+        message?: string;
     };
     // Extend with page-specific props
     data?: T;

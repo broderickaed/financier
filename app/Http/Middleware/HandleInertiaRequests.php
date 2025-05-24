@@ -40,16 +40,32 @@ class HandleInertiaRequests extends Middleware
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
 
         return [
+            // Spread parent's shared data
             ...parent::share($request),
+
             'name' => config('app.name'),
-            'quote' => ['message' => trim($message), 'author' => trim($author)],
+
+            'quote' => [
+                'message' => trim($message),
+                'author' => trim($author),
+            ],
+
             'auth' => [
                 'user' => $request->user(),
             ],
-            'ziggy' => fn (): array => [
+
+            // Add flash messages here
+            'flash' => [
+                'success' => session('success'),
+                'error' => session('error'),
+                'message' => session('message'),
+            ],
+
+            'ziggy' => fn(): array => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
             ],
+
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }
