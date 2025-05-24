@@ -16,7 +16,8 @@ class Transaction extends Model
         'description',
         'amount',
         'type',
-        'related_transaction_id'
+        'related_transaction_id',
+        'category_id'
     ];
 
     public function user()
@@ -32,5 +33,10 @@ class Transaction extends Model
     public function relatedTransaction()
     {
         return $this->belongsTo(Transaction::class, 'related_transaction_id');
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
     }
 }

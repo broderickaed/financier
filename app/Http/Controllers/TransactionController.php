@@ -25,9 +25,11 @@ class TransactionController extends Controller
     public function create(): Response
     {
         $accounts = request()->user()->accounts()->get();
+        $categories = request()->user()->categories()->get();
 
         return Inertia::render('Transactions/Create', [
             'accounts' => $accounts,
+            'categories' => $categories,
         ]);
     }
 
@@ -40,8 +42,9 @@ class TransactionController extends Controller
             'type' => ['required', 'in:income,expense,transfer,refund'],
             'account_id' => ['required', 'exists:accounts,id'],
             'related_account_id' => ['required_if:type,transfer', 'exists:accounts,id', 'different:account_id'],
+            'category_id' => ['nullable', 'exists:categories,id'],
         ]);
-        
+
         if ($validated['type'] === 'transfer') {
             // Create withdrawal transaction
             $withdrawal = $request->user()->transactions()->create([
@@ -50,6 +53,7 @@ class TransactionController extends Controller
                 'description' => $validated['description'],
                 'amount' => -$validated['amount'],
                 'type' => 'transfer',
+                'category_id' => $validated['category_id'],
             ]);
 
             // Create deposit transaction
@@ -59,6 +63,7 @@ class TransactionController extends Controller
                 'description' => $validated['description'],
                 'amount' => $validated['amount'],
                 'type' => 'transfer',
+                'category_id' => $validated['category_id'],
                 'related_transaction_id' => $withdrawal->id,
             ]);
 
@@ -70,19 +75,20 @@ class TransactionController extends Controller
                 $amount = -$amount;
             }
             // refund and income will keep the positive amount
-            
+
             $request->user()->transactions()->create([
                 'date' => $validated['date'],
                 'description' => $validated['description'],
                 'amount' => $amount,
                 'type' => $validated['type'],
+                'category_id' => $validated['category_id'],
                 'account_id' => $validated['account_id'],
             ]);
         }
 
         return redirect()->route('transactions.index');
     }
-    
+
 
     public function show(Request $request, Transaction $transaction): Response
     {
@@ -100,8 +106,9 @@ class TransactionController extends Controller
         if ($request->user()->cannot('update', $transaction)) {
             abort(403);
         }
-        
+
         $accounts = request()->user()->accounts()->get();
+        $categories = request()->user()->categories()->get();
 
         // For transfers, always show the withdrawal side (negative amount)
         if ($transaction->type === 'transfer' && $transaction->amount > 0) {
@@ -124,9 +131,10 @@ class TransactionController extends Controller
             ]),
             'accounts' => $accounts,
             'relatedAccount' => $accounts->find($relatedAccountId),
+            'categories' => $categories,
         ]);
     }
-    
+
 
     public function update(Request $request, Transaction $transaction)
     {
@@ -141,6 +149,7 @@ class TransactionController extends Controller
             'type' => ['required', 'in:income,expense,transfer,refund'],
             'account_id' => ['required', 'exists:accounts,id'],
             'related_account_id' => ['required_if:type,transfer', 'exists:accounts,id', 'different:account_id'],
+            'category_id' => ['nullable', 'exists:categories,id'],
         ]);
 
         // If this is the deposit side of a transfer, switch to the withdrawal side
@@ -161,6 +170,7 @@ class TransactionController extends Controller
                 'description' => $validated['description'],
                 'amount' => -$validated['amount'],
                 'type' => 'transfer',
+                'category_id' => $validated['category_id'],
                 'account_id' => $validated['account_id'],
             ]);
 
@@ -171,6 +181,7 @@ class TransactionController extends Controller
                     'description' => $validated['description'],
                     'amount' => $validated['amount'],
                     'type' => 'transfer',
+                    'category_id' => $validated['category_id'],
                     'account_id' => $validated['related_account_id'],
                 ]);
             } else {
@@ -179,6 +190,7 @@ class TransactionController extends Controller
                     'description' => $validated['description'],
                     'amount' => $validated['amount'],
                     'type' => 'transfer',
+                    'category_id' => $validated['category_id'],
                     'account_id' => $validated['related_account_id'],
                     'related_transaction_id' => $transaction->id,
                 ]);
@@ -207,6 +219,7 @@ class TransactionController extends Controller
                 'description' => $validated['description'],
                 'amount' => $amount,
                 'type' => $validated['type'],
+                'category_id' => $validated['category_id'],
                 'account_id' => $validated['account_id'],
             ]);
         }
