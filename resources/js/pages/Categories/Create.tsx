@@ -1,18 +1,18 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head } from '@inertiajs/react';
-import AccountForm from './accountForm';
+import CategoryForm from './categoryForm';
 
-export default function AccountCreate() {
+export default function CategoryCreate() {
     return (
         <AppLayout
             breadcrumbs={[
                 { title: 'Config', href: '/config' },
-                { title: 'Accounts', href: '/accounts' },
-                { title: 'Create Account', href: '/accounts/create' },
+                { title: 'Categories', href: '/categories' },
+                { title: 'Create Category', href: '/categories/create' },
             ]}
         >
             <Head title="Create Account" />
-            <AccountForm />
+            <CategoryForm />
         </AppLayout>
     );
 }

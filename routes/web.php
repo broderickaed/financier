@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -13,11 +14,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
-    Route::resource('accounts', AccountController::class);
+
+
+    Route::resource('transactions', TransactionController::class);
+
     Route::get('/config', function () {
         return Inertia::render('Config/Index');
     })->name('config.index');
-    Route::resource('transactions', TransactionController::class);
+    Route::resource('categories', CategoryController::class);
+    Route::resource('accounts', AccountController::class);
 });
 
 require __DIR__ . '/settings.php';

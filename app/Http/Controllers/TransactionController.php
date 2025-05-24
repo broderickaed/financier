@@ -9,9 +9,9 @@ use Inertia\Response;
 
 class TransactionController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(): Response
     {
-        $transactions = $request->user()
+        $transactions = request()->user()
             ->transactions()
             ->with(['account'])
             ->latest()
@@ -90,9 +90,9 @@ class TransactionController extends Controller
     }
 
 
-    public function show(Request $request, Transaction $transaction): Response
+    public function show(Transaction $transaction): Response
     {
-        if ($request->user()->cannot('viewAny', Transaction::class)) {
+        if (request()->user()->cannot('viewAny', Transaction::class)) {
             abort(403);
         }
 
@@ -101,9 +101,9 @@ class TransactionController extends Controller
         ]);
     }
 
-    public function edit(Request $request, Transaction $transaction): Response
+    public function edit(Transaction $transaction): Response
     {
-        if ($request->user()->cannot('update', $transaction)) {
+        if (request()->user()->cannot('update', $transaction)) {
             abort(403);
         }
 

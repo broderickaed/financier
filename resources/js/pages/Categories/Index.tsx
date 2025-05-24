@@ -2,37 +2,37 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
-import { Account } from '@/types/models';
+import { Category } from '@/types/models';
 import { Head, Link } from '@inertiajs/react';
 import { Pencil, PlusCircle } from 'lucide-react';
 
 interface Props {
-    accounts: Account[];
+    categories: Category[];
 }
 
-export default function AccountIndex({ accounts }: Props) {
+export default function CategoryIndex({ categories }: Props) {
     return (
         <AppLayout
             breadcrumbs={[
                 { title: 'Config', href: '/config' },
-                { title: 'Accounts', href: '/accounts' },
+                { title: 'Categories', href: '/categories' },
             ]}
         >
-            <Head title="Accounts" />
+            <Head title="Categories" />
             <div className="space-y-6 p-6">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold">Accounts</h1>
+                    <h1 className="text-2xl font-bold">Categories</h1>
                     <Button asChild>
-                        <Link href="/accounts/create">
+                        <Link href="/categories/create">
                             <PlusCircle className="mr-2 h-4 w-4" />
-                            New Account
+                            New Category
                         </Link>
                     </Button>
                 </div>
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Your Accounts</CardTitle>
+                        <CardTitle>Your Categories</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <Table>
@@ -43,12 +43,12 @@ export default function AccountIndex({ accounts }: Props) {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {accounts.map((account) => (
-                                    <TableRow key={account.id}>
-                                        <TableCell>{account.name}</TableCell>
+                                {categories.map((category) => (
+                                    <TableRow key={category.id}>
+                                        <TableCell>{category.name}</TableCell>
                                         <TableCell>
                                             <Button variant="ghost" size="sm" asChild>
-                                                <Link href={`/accounts/${account.id}/edit`}>
+                                                <Link href={`/categories/${category.id}/edit`}>
                                                     <Pencil className="h-4 w-4" />
                                                     <span className="sr-only">Edit</span>
                                                 </Link>
@@ -56,10 +56,10 @@ export default function AccountIndex({ accounts }: Props) {
                                         </TableCell>
                                     </TableRow>
                                 ))}
-                                {accounts.length === 0 && (
+                                {categories.length === 0 && (
                                     <TableRow>
                                         <TableCell colSpan={2} className="text-muted-foreground text-center">
-                                            No accounts found. Create your first account to get started.
+                                            No categories found. Create your first category to get started.
                                         </TableCell>
                                     </TableRow>
                                 )}
