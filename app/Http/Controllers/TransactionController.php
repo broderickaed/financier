@@ -242,4 +242,104 @@ class TransactionController extends Controller
 
         return redirect()->route('transactions.index');
     }
+
+    public function summaryByCategory(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->cannot('viewAny', Transaction::class)) {
+            abort(403);
+        }
+
+        $dates = $this->getMonthlyDateRanges();
+
+        $currentMonthData = $user->transactions()
+            ->whereBetween('date', [$dates['currentMonthStart'], now()])
+            ->selectRaw('category_id, SUM(amount) as total')
+            ->groupBy('category_id')
+            ->with('category')
+            ->get();
+
+        $previousMonthData = $user->transactions()
+            ->whereBetween('date', [$dates['previousMonthStart'], $dates['previousMonthEnd']])
+            ->selectRaw('category_id, SUM(amount) as total')
+            ->groupBy('category_id')
+            ->with('category')
+            ->get();
+
+        $projectionData = $previousMonthData->map(function ($item) use ($dates) {
+            $projectedTotal = ($item->total / $dates['daysElapsed']) * $dates['daysInCurrentMonth'];
+            return [
+                'category_id' => $item->category_id,
+                'projected_total' => $projectedTotal,
+                'category' => $item->category,
+            ];
+        });
+
+        return inertia('Transactions/SummaryByCategory', [
+            'currentMonth' => $currentMonthData,
+            'previousMonth' => $previousMonthData,
+            'projection' => $projectionData,
+        ]);
+    }
+
+    public function summaryByAccount(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->cannot('viewAny', Transaction::class)) {
+            abort(403);
+        }
+
+        $dates = $this->getMonthlyDateRanges();
+
+        $currentMonthData = $user->transactions()
+            ->whereBetween('date', [$dates['currentMonthStart'], now()])
+            ->selectRaw('account_id, SUM(amount) as total')
+            ->groupBy('account_id')
+            ->with('account')
+            ->get();
+
+        $previousMonthData = $user->transactions()
+            ->whereBetween('date', [$dates['previousMonthStart'], $dates['previousMonthEnd']])
+            ->selectRaw('account_id, SUM(amount) as total')
+            ->groupBy('account_id')
+            ->with('account')
+            ->get();
+
+        $projectionData = $previousMonthData->map(function ($item) use ($dates) {
+            $projectedTotal = ($item->total / $dates['daysElapsed']) * $dates['daysInCurrentMonth'];
+            return [
+                'account_id' => $item->account_id,
+                'projected_total' => $projectedTotal,
+                'account' => $item->account,
+            ];
+        });
+
+        return inertia('Transactions/SummaryByAccount', [
+            'currentMonth' => $currentMonthData,
+            'previousMonth' => $previousMonthData,
+            'projection' => $projectionData,
+        ]);
+    }
+
+    private function getMonthlyDateRanges()
+    {
+        $now = now();
+        $currentMonthStart = $now->copy()->startOfMonth();
+        $currentMonthEnd = $now->copy()->endOfMonth();
+        $previousMonthStart = $now->copy()->subMonth()->startOfMonth();
+        $previousMonthEnd = $now->copy()->subMonth()->endOfMonth();
+        $daysInCurrentMonth = $currentMonthEnd->day;
+        $daysElapsed = $now->day;
+
+        return [
+            'currentMonthStart' => $currentMonthStart,
+            'currentMonthEnd' => $currentMonthEnd,
+            'previousMonthStart' => $previousMonthStart,
+            'previousMonthEnd' => $previousMonthEnd,
+            'daysInCurrentMonth' => $daysInCurrentMonth,
+            'daysElapsed' => $daysElapsed,
+        ];
+    }
 }

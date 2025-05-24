@@ -18,6 +18,8 @@ Route::middleware(['auth', 'verified', EnsureUserHasAccount::class])->group(func
 
 
     Route::resource('transactions', TransactionController::class);
+    Route::get('/transactions/summary/category', [TransactionController::class, 'summaryByCategory'])->name('transactions.summary.category');
+    Route::get('/transactions/summary/account', [TransactionController::class, 'summaryByAccount'])->name('transactions.summary.account');
 
     Route::get('/config', function () {
         return Inertia::render('Config/Index');
