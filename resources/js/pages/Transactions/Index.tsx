@@ -2,12 +2,13 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { PageProps } from '@/types';
-import { Account, Transaction } from '@/types/models';
+import { Account, Split, Transaction } from '@/types/models';
 import { Head, Link } from '@inertiajs/react';
 
 interface Props extends PageProps {
     transactions: (Transaction & {
         account: Account;
+        splits: Split[];
     })[];
 }
 
@@ -51,22 +52,59 @@ export default function TransactionIndex({ transactions }: Props) {
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                transactions.map((tx) => (
-                                    <TableRow key={tx.id}>
-                                        <TableCell>{tx.date}</TableCell>
-                                        <TableCell>{tx.description}</TableCell>
-                                        <TableCell>{tx.type}</TableCell>
-                                        <TableCell className={`font-medium ${tx.amount < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                            ${(tx.amount / 100).toFixed(2)}
-                                        </TableCell>
-                                        <TableCell>{tx.account?.name}</TableCell>
-                                        <TableCell>
-                                            <Button variant="ghost" size="sm" asChild>
-                                                <Link href={`/transactions/${tx.id}/edit`}>Edit</Link>
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
+                                transactions.map((tx) => {
+                                    const rows = [
+                                        <TableRow key={tx.id}>
+                                            <TableCell>{tx.date}</TableCell>
+                                            <TableCell>{tx.description}</TableCell>
+                                            <TableCell>{tx.type}</TableCell>
+                                            <TableCell className={`font-medium ${tx.amount < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                                ${(tx.amount / 100).toFixed(2)}
+                                            </TableCell>
+                                            <TableCell>{tx.account?.name}</TableCell>
+                                            <TableCell>
+                                                <Button variant="ghost" size="sm" asChild>
+                                                    <Link href={`/transactions/${tx.id}/edit`}>Edit</Link>
+                                                </Button>
+                                                <Button variant="ghost" size="sm" asChild>
+                                                    <Link href={`/transactions/${tx.id}/splits/create`}>New Split</Link>
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>,
+                                    ];
+                                    if (tx.splits && tx.splits.length > 0) {
+                                        const currentUserId = tx.user_id;
+                                        const userSplit = tx.splits.find((s) => s.user_id === currentUserId);
+
+                                        rows.push(
+                                            <TableRow key={`${tx.id}-split`} className="bg-muted">
+                                                <TableCell />
+                                                <TableCell />
+                                                <TableCell className="text-muted-foreground italic">My portion</TableCell>
+                                                <TableCell className="font-medium">
+                                                    {userSplit
+                                                        ? `$${((userSplit.amount * (tx.amount / Math.abs(tx.amount))) / 100).toFixed(2)}`
+                                                        : '-'}
+                                                </TableCell>
+                                                <TableCell colSpan={2}>
+                                                    {tx.splits
+                                                        .filter((s) => s.user_id !== tx.user_id)
+                                                        .map((split, idx) => (
+                                                            <div key={split.id || idx} className="flex items-center gap-2">
+                                                                <span className="text-muted-foreground text-sm">
+                                                                    {split.name || `User ${split.user_id}`}:
+                                                                </span>
+                                                                <span>${((split.amount * (tx.amount / Math.abs(tx.amount))) / 100).toFixed(2)}</span>
+                                                            </div>
+                                                        ))}
+                                                </TableCell>
+                                                <TableCell />
+                                                <TableCell />
+                                            </TableRow>,
+                                        );
+                                    }
+                                    return rows;
+                                })
                             )}
                         </TableBody>
                     </Table>

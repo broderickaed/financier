@@ -13,7 +13,7 @@ class TransactionController extends Controller
     {
         $transactions = request()->user()
             ->transactions()
-            ->with(['account'])
+            ->with(['account', 'splits'])
             ->latest()
             ->get();
 

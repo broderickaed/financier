@@ -64,4 +64,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Category::class);
     }
+
+    public function splits()
+    {
+        return $this->hasMany(Split::class);
+    }
 }

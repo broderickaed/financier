@@ -1,3 +1,5 @@
+import { User } from '.';
+
 export interface Account {
     id: number;
     name: string;
@@ -22,6 +24,18 @@ export interface Category {
     id: number;
     name: string;
     user_id: number;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface Split {
+    id: number;
+    transaction_id: number;
+    name: string;
+    user_id: number;
+    user?: User;
+    amount: number;
+    note: string;
     created_at: string;
     updated_at: string;
 }

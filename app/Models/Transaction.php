@@ -39,4 +39,9 @@ class Transaction extends Model
     {
         return $this->belongsTo(Category::class);
     }
+
+    public function splits()
+    {
+        return $this->hasMany(Split::class);
+    }
 }

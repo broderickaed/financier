@@ -6,24 +6,37 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import type { Account, Category, Transaction } from '@/types/models';
-import { router, useForm } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import { LoaderCircle, Trash2 } from 'lucide-react';
 import { FormEvent } from 'react';
 
 export default function TransactionForm({
     accounts,
+    accountId,
     transaction,
     categories,
+    categoryId,
     relatedAccount,
 }: {
     accounts: Account[];
+    accountId?: number;
     transaction?: Transaction;
     categories: Category[];
+    categoryId?: number;
     relatedAccount?: Account;
 }) {
     const editing = !!transaction;
 
-    const { data, setData, processing, errors } = useForm({
+    const {
+        data,
+        transform,
+        put,
+        post,
+        delete: destroy,
+        setData,
+        processing,
+        errors,
+    } = useForm({
         date: transaction?.date.split('T')[0] || new Date().toISOString().split('T')[0],
         description: transaction?.description || '',
         amount: transaction ? (transaction.amount / 100).toFixed(2) : '',
@@ -41,7 +54,7 @@ export default function TransactionForm({
         e.preventDefault();
         const url = editing ? `/transactions/${transaction?.id}` : '/transactions';
 
-        const formData = {
+        transform((data) => ({
             date: data.date,
             description: data.description,
             amount: Math.round(parseFloat(data.amount) * 100),
@@ -49,18 +62,18 @@ export default function TransactionForm({
             category_id: parseInt(data.category_id),
             account_id: parseInt(data.account_id),
             related_account_id: data.related_account_id ? parseInt(data.related_account_id) : undefined,
-        };
+        }));
 
         if (editing) {
-            router.put(url, formData);
+            put(url);
         } else {
-            router.post(url, formData);
+            post(url);
         }
     };
 
     const handleDelete = () => {
         if (transaction) {
-            router.delete(`/transactions/${transaction.id}`);
+            destroy(`/transactions/${transaction.id}`);
         }
     };
 
