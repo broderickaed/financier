@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Transaction;
+use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -252,29 +255,80 @@ class TransactionController extends Controller
         }
 
         $dates = $this->getMonthlyDateRanges();
+        $authenticatedUserId = $user->id;
 
-        $currentMonthData = $user->transactions()
+        // --- Helper function to process raw transactions into category summaries ---
+        $processTransactionsForSummary = function (Collection $transactions) use ($authenticatedUserId): Collection {
+            $categoryTotals = []; // Key: category_id, Value: ['total' => amount, 'category' => CategoryModel]
+
+            foreach ($transactions as $transaction) {
+                $userContribution = 0;
+
+                // Check if the transaction has splits
+                if ($transaction->splits->isNotEmpty()) {
+                    // Find the split amount specifically assigned to the authenticated user
+                    $userSplit = $transaction->splits->firstWhere('user_id', $authenticatedUserId);
+
+                    if ($userSplit) {
+                        $userContribution = $userSplit->amount;
+                    }
+                    // If splits exist but none are for this user, contribution remains 0
+                } else {
+                    // If no splits, the full transaction amount contributes
+                    $userContribution = $transaction->amount;
+                }
+
+                $categoryId = $transaction->category_id;
+                $categoryName = $transaction->category ? $transaction->category->name : 'Uncategorized'; // Handle missing category
+
+                if (!isset($categoryTotals[$categoryId])) {
+                    $categoryTotals[$categoryId] = [
+                        'category_id' => $categoryId,
+                        'total' => 0,
+                        'category' => $transaction->category, // Store the full category object
+                    ];
+                }
+                $categoryTotals[$categoryId]['total'] += $userContribution;
+            }
+
+            // Convert the associative array back to a collection of objects
+            return collect(array_values($categoryTotals));
+        };
+
+
+        // --- Fetch Current Month Transactions ---
+        $rawCurrentMonthTransactions = Transaction::query()
+            ->where('user_id', $authenticatedUserId) // Transactions created by the user
             ->whereBetween('date', [$dates['currentMonthStart'], now()])
-            ->selectRaw('category_id, SUM(amount) as total')
-            ->groupBy('category_id')
-            ->with('category')
+            ->with(['category', 'splits']) // Eager load category and splits
             ->get();
 
-        $previousMonthData = $user->transactions()
+        $currentMonthData = $processTransactionsForSummary($rawCurrentMonthTransactions);
+
+
+        // --- Fetch Previous Month Transactions ---
+        $rawPreviousMonthTransactions = Transaction::query()
+            ->where('user_id', $authenticatedUserId) // Transactions created by the user
             ->whereBetween('date', [$dates['previousMonthStart'], $dates['previousMonthEnd']])
-            ->selectRaw('category_id, SUM(amount) as total')
-            ->groupBy('category_id')
-            ->with('category')
+            ->with(['category', 'splits']) // Eager load category and splits
             ->get();
 
-        $projectionData = $previousMonthData->map(function ($item) use ($dates) {
-            $projectedTotal = ($item->total / $dates['daysElapsed']) * $dates['daysInCurrentMonth'];
+        $previousMonthData = $processTransactionsForSummary($rawPreviousMonthTransactions);
+
+
+        // --- Projection Data ---
+        $projectionData = $currentMonthData->map(function ($item) use ($dates) {
+            // Avoid division by zero if there are no days in previous month (unlikely for full month)
+            $dailyAverage = $item['total'] / $dates['daysElapsed'];
+            $projectedTotal = $dailyAverage * $dates['daysInCurrentMonth'];
+
             return [
-                'category_id' => $item->category_id,
+                'category_id' => $item['category_id'],
                 'projected_total' => $projectedTotal,
-                'category' => $item->category,
+                'category' => $item['category'],
             ];
         });
+
 
         return inertia('Transactions/SummaryByCategory', [
             'currentMonth' => $currentMonthData,
@@ -292,27 +346,74 @@ class TransactionController extends Controller
         }
 
         $dates = $this->getMonthlyDateRanges();
+        $authenticatedUserId = $user->id;
 
-        $currentMonthData = $user->transactions()
+        // --- Helper function to process raw transactions into account summaries ---
+        $processTransactionsForAccountSummary = function (Collection $transactions) use ($authenticatedUserId): \Illuminate\Support\Collection {
+            $accountTotals = []; // Key: account_id, Value: ['total' => amount, 'account' => AccountModel]
+
+            foreach ($transactions as $transaction) {
+                $userContribution = 0;
+
+                // Check if the transaction has splits
+                if ($transaction->splits->isNotEmpty()) {
+                    // Find the split amount specifically assigned to the authenticated user
+                    $userSplit = $transaction->splits->firstWhere('user_id', $authenticatedUserId);
+
+                    if ($userSplit) {
+                        $userContribution = $userSplit->amount;
+                    }
+                    // If splits exist but none are for this user, contribution remains 0
+                } else {
+                    // If no splits, the full transaction amount contributes
+                    $userContribution = $transaction->amount;
+                }
+
+                $accountId = $transaction->account_id;
+                $account = $transaction->account; // Get the associated account object
+
+                if (!isset($accountTotals[$accountId])) {
+                    $accountTotals[$accountId] = [
+                        'account_id' => $accountId,
+                        'total' => 0,
+                        'account' => $account, // Store the full account object
+                    ];
+                }
+                $accountTotals[$accountId]['total'] += $userContribution;
+            }
+
+            // Convert the associative array back to a collection of objects
+            return \Illuminate\Support\Collection::make(array_values($accountTotals));
+        };
+
+        // --- Fetch Current Month Transactions for Accounts ---
+        $rawCurrentMonthAccountTransactions = Transaction::query()
+            ->where('user_id', $authenticatedUserId) // Transactions created by the user
             ->whereBetween('date', [$dates['currentMonthStart'], now()])
-            ->selectRaw('account_id, SUM(amount) as total')
-            ->groupBy('account_id')
-            ->with('account')
+            ->with(['account', 'splits']) // Eager load account and splits
             ->get();
 
-        $previousMonthData = $user->transactions()
+        $currentMonthData = $processTransactionsForAccountSummary($rawCurrentMonthAccountTransactions);
+
+        // --- Fetch Previous Month Transactions for Accounts ---
+        $rawPreviousMonthAccountTransactions = Transaction::query()
+            ->where('user_id', $authenticatedUserId)
             ->whereBetween('date', [$dates['previousMonthStart'], $dates['previousMonthEnd']])
-            ->selectRaw('account_id, SUM(amount) as total')
-            ->groupBy('account_id')
-            ->with('account')
+            ->with(['account', 'splits']) // Eager load account and splits
             ->get();
 
-        $projectionData = $previousMonthData->map(function ($item) use ($dates) {
-            $projectedTotal = ($item->total / $dates['daysElapsed']) * $dates['daysInCurrentMonth'];
+        $previousMonthData = $processTransactionsForAccountSummary($rawPreviousMonthAccountTransactions);
+
+        // --- Projection Data for Accounts ---
+        $daysInPreviousMonth = $dates['previousMonthEnd']->day;
+
+        $projectionData = $currentMonthData->map(function ($item) use ($dates) {
+            $dailyAverage = ($item['total'] / $dates['daysElapsed']);
+            $projectedTotal = $dailyAverage * $dates['daysInCurrentMonth'];
             return [
-                'account_id' => $item->account_id,
+                'account_id' => $item['account_id'],
                 'projected_total' => $projectedTotal,
-                'account' => $item->account,
+                'account' => $item['account'],
             ];
         });
 

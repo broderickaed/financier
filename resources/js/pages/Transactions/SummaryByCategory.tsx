@@ -138,7 +138,7 @@ export default function SummaryByCategoryPage({ auth, currentMonth, previousMont
                                             <TableCell>{formatCurrencyForDisplay(item.currentMonthSpend)}</TableCell>
                                             <TableCell>{formatCurrencyForDisplay(item.currentMonthTotalProjectedMagnitude)}</TableCell>
                                             <TableCell className="text-right">
-                                                {Math.round((item.currentMonthTotalProjectedMagnitude / item.previousMonthSpend) * 100)}%
+                                                {Math.round(item.currentMonthTotalProjectedMagnitude / (item.previousMonthSpend || 100))}%
                                             </TableCell>
                                         </TableRow>
                                     ))

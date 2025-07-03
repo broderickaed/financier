@@ -68,6 +68,10 @@ class SplitController extends Controller
             ])->withInput();
         }
 
+        // Determine the sign to apply to split amounts
+        // If the transaction amount is negative (an expense), the splits should also be negative.
+        // If the transaction amount is positive (income/transfer deposit), the splits should be positive.
+        $sign = ($transaction->amount < 0) ? -1 : 1;
 
         // Delete existing splits for this transaction if you want to replace them all
         $transaction->splits()->delete(); // Or handle updates more granularly
@@ -76,7 +80,7 @@ class SplitController extends Controller
             $transaction->splits()->create([
                 'user_id' => $splitData['user_id'] ?? null,
                 'name' => $splitData['user_id'] ? null : $splitData['name'], // Prefer user_id if available
-                'amount' => $splitData['amount'],
+                'amount' => $splitData['amount'] * $sign, // Apply the sign to the amount
                 'note' => $splitData['note'] ?? null,
             ]);
         }
