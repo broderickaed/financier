@@ -51,12 +51,12 @@ class User extends Authenticatable
 
     public function accounts(): HasMany
     {
-        return $this->hasMany(Account::class, 'user_id');
+        return $this->hasMany(Account::class, 'owner_id');
     }
 
     public function categories(): HasMany
     {
-        return $this->hasMany(Category::class, 'user_id');
+        return $this->hasMany(Category::class, 'owner_id');
     }
 
     public function createdGroups(): HasMany

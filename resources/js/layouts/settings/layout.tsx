@@ -22,6 +22,16 @@ const sidebarNavItems: NavItem[] = [
         href: '/settings/appearance',
         icon: null,
     },
+    {
+        title: 'Accounts',
+        href: '/settings/accounts',
+        icon: null,
+    },
+    {
+        title: 'Categories',
+        href: '/settings/categories',
+        icon: null,
+    },
 ];
 
 export default function SettingsLayout({ children }: PropsWithChildren) {

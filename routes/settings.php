@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Settings\AccountController;
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -18,4 +19,8 @@ Route::middleware('auth')->group(function () {
     Route::get('settings/appearance', function () {
         return Inertia::render('settings/appearance');
     })->name('appearance');
+
+    Route::get('settings/accounts', [AccountController::class, 'index'])->name('accounts.index');
+    Route::post('settings/accounts/store', [AccountController::class, 'store'])->name('accounts.store');
+    Route::patch('settings/accounts/{account}', [AccountController::class, 'update'])->name('accounts.update');
 });
