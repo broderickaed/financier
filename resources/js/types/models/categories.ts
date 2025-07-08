@@ -1,11 +1,12 @@
 import { User } from '..';
 
-export interface Account {
+export interface Category {
     id: number;
     owner_id: number;
     name: string;
-    type: string;
+    parent_id: string | null;
     created_at: string;
     updated_at: string;
+    parent?: Category;
     owner?: User;
 }

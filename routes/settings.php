@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Settings\AccountController;
+use App\Http\Controllers\Settings\CategoryController;
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -23,4 +24,8 @@ Route::middleware('auth')->group(function () {
     Route::get('settings/accounts', [AccountController::class, 'index'])->name('accounts.index');
     Route::post('settings/accounts/store', [AccountController::class, 'store'])->name('accounts.store');
     Route::patch('settings/accounts/{account}', [AccountController::class, 'update'])->name('accounts.update');
+
+    Route::get('settings/categories', [CategoryController::class, 'index'])->name('categories.index');
+    Route::post('settings/categories/store', [CategoryController::class, 'store'])->name('categories.store');
+    Route::patch('settings/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
 });
