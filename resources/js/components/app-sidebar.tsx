@@ -18,6 +18,11 @@ const mainNavItems: NavItem[] = [
         href: '/groups',
         icon: Users,
     },
+    {
+        title: 'Guests',
+        href: '/guests',
+        icon: Users,
+    },
 ];
 
 const footerNavItems: NavItem[] = [];
