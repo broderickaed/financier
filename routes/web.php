@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\GuestController;
+use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -20,6 +21,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Guest Routes (simiplified with resource)
     Route::resource('guests', GuestController::class)->except(['show', 'destroy']);
+
+    // Transaction Routes (simplified with resource)
+    Route::resource('transactions', TransactionController::class)->except(['show']);
 });
 
 require __DIR__ . '/settings.php';

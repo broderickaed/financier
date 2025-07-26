@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -20,6 +21,23 @@ class Transaction extends Model
         'transaction_date',
         'description'
     ];
+
+    protected $appends = [
+        'amount_dollars',
+        'formatted_amount'
+    ];
+
+    // Accessor for dollar amount
+    public function getAmountDollarsAttribute(): float
+    {
+        return $this->amount / 100;
+    }
+
+    // Accessor for formatted amount
+    public function getFormattedAmountAttribute(): string
+    {
+        return '$' . number_format($this->amount / 100, 2);
+    }
 
     public function payer(): MorphTo
     {
