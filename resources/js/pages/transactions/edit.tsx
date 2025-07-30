@@ -93,9 +93,14 @@ export default function Edit({ auth, transaction, groups, guests, users, account
             <Head title="Create Guest" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="absolute top-3 right-3">
-                    <Link href="/transactions">
-                        <Button variant={'outline'}>cancel</Button>
-                    </Link>
+                    <div className="flex gap-2">
+                        <Link href={`/transactions/${transaction.id}/splits/edit`}>
+                            <Button variant={'outline'}>split</Button>
+                        </Link>
+                        <Link href="/transactions">
+                            <Button variant={'outline'}>cancel</Button>
+                        </Link>
+                    </div>
                 </div>
                 <form onSubmit={submit} className="space-y-6">
                     <ReusableInput

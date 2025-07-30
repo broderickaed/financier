@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\GuestController;
+use App\Http\Controllers\SplitController;
 use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -24,6 +25,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Transaction Routes (simplified with resource)
     Route::resource('transactions', TransactionController::class)->except(['show']);
+
+    // --- Split Routes (Nested under Transactions) ---
+    Route::prefix('transactions/{transaction}/splits')->group(function () {
+        Route::get('/edit', [SplitController::class, 'edit'])->name('transactions.splits.edit');
+        Route::put('/', [SplitController::class, 'update'])->name('transactions.splits.update');
+    });
 });
 
 require __DIR__ . '/settings.php';

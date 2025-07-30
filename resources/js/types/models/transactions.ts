@@ -3,6 +3,7 @@ import { Account } from './accounts';
 import { Category } from './categories';
 import { Group } from './groups';
 import { Guest } from './guests';
+import { Split } from './splits';
 
 export interface Transaction {
     id: string;
@@ -25,4 +26,5 @@ export interface Transaction {
     group?: Group;
     account?: Account;
     category?: Category;
+    splits?: Split[];
 }

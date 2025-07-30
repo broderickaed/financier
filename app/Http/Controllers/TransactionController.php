@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Guest;
+use App\Http\Requests\StoreTransactionRequest;
+use App\Http\Requests\UpdateTransactionRequest;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -14,8 +16,16 @@ class TransactionController extends Controller
 {
     public function index(Request $request): Response
     {
+        $user = $request->user();
+
+        $transactions = $user->createdTransactions()
+            ->with(['category', 'account', 'splits.participant'])
+            ->latest('created_at')
+            ->limit(25)
+            ->get();
+
         return Inertia::render('transactions/index', [
-            'transactions' => $request->user()->createdTransactions()->with(['category', 'account'])->get(),
+            'transactions' => $transactions,
         ]);
     }
 
@@ -34,69 +44,48 @@ class TransactionController extends Controller
         return Inertia::render('transactions/create', $data);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(StoreTransactionRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'payer_type' => [
-                'required',
-                'in:App\\Models\\User,App\\Models\\Guest',
-            ],
-            'payer_id' => [
-                'required',
-                'integer',
-                function ($attribute, $value, $fail) use ($request) {
-                    if ($request->input('payer_type') === 'App\\Models\\User') {
-                        if (!User::where('id', $value)->exists()) {
-                            $fail('Selected payer user does not exist.');
-                        }
-                    } elseif ($request->input('payer_type') === 'App\\Models\\Guest') {
-                        if (!Guest::where('id', $value)->exists()) {
-                            $fail('Selected payer guest does not exist.');
-                        }
-                    }
-                },
-            ],
-            'group_id' => [
-                'required',
-                'integer',
-                'exists:groups,id',
-            ],
-            'account_id' => [
-                'required',
-                'integer',
-                'exists:accounts,id',
-            ],
-            'category_id' => [
-                'required',
-                'integer',
-                'exists:categories,id',
-            ],
-            'amount' => [
-                'required',
-                'numeric',
-            ],
-            'transaction_date' => [
-                'required',
-                'date',
-            ],
-            'description' => [
-                'required',
-                'string',
-                'max:255',
-            ],
-        ]);
+        $validated = $request->validated();
+        $user = $request->user();
 
-        $validated['amount'] = (int) $validated['amount'];
-        $validated['creator_id'] = $request->user()->id;
+        // Create a default split to assign to user for new transactions
+        $split = [
+            'participant_type' => 'App\\Models\\User',
+            'participant_id' => $user->id,
+            'portion' => $validated['amount'],
+            'settled_at' => null,
+        ];
 
-        Transaction::create($validated);
+        DB::transaction(function () use ($validated, $user, $split) {
+            $transaction = $user->createdTransactions()->create([
+                'group_id' => $validated['group_id'],
+                'account_id' => $validated['account_id'],
+                'category_id' => $validated['category_id'],
+                'amount' => $validated['amount'],
+                'transaction_date' => $validated['transaction_date'],
+                'description' => $validated['description'],
+                'payer_type' => $validated['payer_type'],
+                'payer_id' => $validated['payer_id'],
+            ]);
+
+            $transaction->splits()->create($split);
+        });
 
         return to_route('transactions.index');
     }
 
     public function edit(Request $request, Transaction $transaction): Response
     {
+        // Ensure user can edit this transaction
+        if ($transaction->creator_id !== $request->user()->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $user = $request->user();
+
+        // Load splits with participant relationship
+        $transaction->load('splits.participant');
 
         $data = [
             'groups' => $user->groups()->get(),
@@ -104,66 +93,45 @@ class TransactionController extends Controller
             'users' => User::all(),
             'accounts' => $user->accounts()->get(),
             'categories' => $user->categories()->get(),
-            'transaction' => $transaction
+            'transaction' => $transaction,
         ];
 
         return Inertia::render('transactions/edit', $data);
     }
 
-    public function update(Request $request, Transaction $transaction): RedirectResponse
+    public function update(UpdateTransactionRequest $request, Transaction $transaction): RedirectResponse
     {
-        $validated = $request->validate([
-            'payer_type' => [
-                'required',
-                'in:App\\Models\\User,App\\Models\\Guest',
-            ],
-            'payer_id' => [
-                'required',
-                'integer',
-                function ($attribute, $value, $fail) use ($request) {
-                    if ($request->input('payer_type') === 'App\\Models\\User') {
-                        if (!User::where('id', $value)->exists()) {
-                            $fail('Selected payer user does not exist.');
-                        }
-                    } elseif ($request->input('payer_type') === 'App\\Models\\Guest') {
-                        if (!Guest::where('id', $value)->exists()) {
-                            $fail('Selected payer guest does not exist.');
-                        }
-                    }
-                },
-            ],
-            'group_id' => [
-                'required',
-                'integer',
-                'exists:groups,id',
-            ],
-            'account_id' => [
-                'required',
-                'integer',
-                'exists:accounts,id',
-            ],
-            'category_id' => [
-                'required',
-                'integer',
-                'exists:categories,id',
-            ],
-            'amount' => [
-                'required',
-                'numeric',
-            ],
-            'transaction_date' => [
-                'required',
-                'date',
-            ],
-            'description' => [
-                'required',
-                'string',
-                'max:255',
-            ],
-        ]);
+        $validated = $request->validated();
 
-        $validated['amount'] = (int) $validated['amount'];
-        $transaction->update($validated);
+        DB::transaction(function () use ($validated, $transaction) {
+            $originalAmount = $transaction->amount;
+
+            $transaction->update([
+                'group_id' => $validated['group_id'],
+                'account_id' => $validated['account_id'],
+                'category_id' => $validated['category_id'],
+                'amount' => $validated['amount'],
+                'transaction_date' => $validated['transaction_date'],
+                'description' => $validated['description'],
+                'payer_type' => $validated['payer_type'],
+                'payer_id' => $validated['payer_id'],
+            ]);
+
+            // If amount has been changed reset splits all to creator
+            if ($originalAmount !== $validated['amount']) {
+                // Delete existing splits and create new ones
+                $transaction->splits()->delete();
+
+                // Create a default split to assign to user for new transactions
+                $split = [
+                    'participant_type' => $validated['payer_type'],
+                    'participant_id' => $validated['payer_id'],
+                    'portion' => $validated['amount'],
+                    'settled_at' => null,
+                ];
+                $transaction->splits()->create($split);
+            }
+        });
 
         return to_route('transactions.index');
     }
@@ -173,8 +141,8 @@ class TransactionController extends Controller
         if ($transaction->creator_id !== $request->user()->id) {
             abort(403, 'Unauthorized action.');
         }
-        $transaction->delete();
 
+        $transaction->delete();
         return to_route('transactions.index');
     }
 }
