@@ -42,17 +42,4 @@ class Split extends Model
     {
         return $this->morphTo();
     }
-
-    public function settle(Transaction $transaction): bool
-    {
-        if ($this->settled_at !== null || $this->settled_by_transaction_id !== null) {
-            return false; // Already settled
-        }
-
-        $this->settled_at = now();
-        $this->settled_by_transaction_id = $transaction->id;
-        $this->save();
-
-        return true;
-    }
 }
