@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\BalanceController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\GuestController;
+use App\Http\Controllers\SettlementController;
 use App\Http\Controllers\SplitController;
 use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
@@ -17,7 +19,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 
     // Group Routes (simplified with resource)
-    Route::resource('groups', GroupController::class)->except(['show', 'destroy']);
+    Route::resource('groups', GroupController::class)->except(['destroy']);
     Route::post('groups/{group}/sync-members', [GroupController::class, 'syncMembers'])->name('groups.syncMembers');
 
     // Guest Routes (simiplified with resource)

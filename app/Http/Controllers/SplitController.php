@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreSplitRequest;
+use App\Models\Group;
+use App\Models\Guest;
+use App\Models\Split;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -15,11 +18,14 @@ class SplitController extends Controller
     {
         $user = $request->user();
 
+        $user->load('guests');
+        $transaction->load('splits');
+
         $data = [
             'transaction' => $transaction,
-            'guests' => $user->guests()->get(),
+            'guests' => $user->guests,
             'users' => User::all(),
-            'splits' => $transaction->splits()->get()
+            'splits' => $transaction->splits
         ];
 
         return Inertia::render('splits/edit', $data);

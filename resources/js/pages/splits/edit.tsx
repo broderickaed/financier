@@ -8,7 +8,7 @@ import { Transaction } from '@/types/models/transactions';
 import { Transition } from '@headlessui/react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { FormEventHandler, useMemo } from 'react';
-import { ParticipantSelect } from './participantselect';
+import { ParticipantSelect } from './participantSelect';
 
 interface Props extends SharedData {
     transaction: Transaction;

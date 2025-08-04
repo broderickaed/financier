@@ -1,7 +1,5 @@
 import InputError from '@/components/input-error';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
@@ -47,7 +45,7 @@ export default function Edit({ group, auth }: Props) {
             <Head title="Edit Group" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="absolute top-3 right-3">
-                    <Link href="/groups">
+                    <Link href={`/groups/${group.id}`}>
                         <Button variant={'outline'}>cancel</Button>
                     </Link>
                 </div>
@@ -81,31 +79,6 @@ export default function Edit({ group, auth }: Props) {
                         </Transition>
                     </div>
                 </form>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Members</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <ul className="divide-y divide-neutral-200">
-                            {group.members?.length === 0 ? (
-                                <li className="py-2 text-neutral-500">No members in this group.</li>
-                            ) : (
-                                group.members?.map((member) => (
-                                    <li key={member.id} className="flex items-center gap-2 py-2">
-                                        {member.id === auth.user.id ? (
-                                            <Badge variant={'default'}>Me</Badge>
-                                        ) : (
-                                            <>
-                                                <span>{member.name}</span>
-                                                <span className="text-sm text-neutral-500">{member.email}</span>
-                                            </>
-                                        )}
-                                    </li>
-                                ))
-                            )}
-                        </ul>
-                    </CardContent>
-                </Card>
             </div>
         </AppLayout>
     );

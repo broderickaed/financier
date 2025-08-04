@@ -8,7 +8,7 @@ import { Head, Link } from '@inertiajs/react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: ' Groups',
+        title: 'Groups',
         href: '/groups',
     },
 ];
@@ -47,9 +47,9 @@ export default function Index({ groups, auth }: Props) {
                                     <TableCell>{formatDateTime(g.created_at)}</TableCell>
                                     <TableCell>
                                         {g.creator_id === auth.user.id && (
-                                            <Link href={`/groups/${g.id}/edit`}>
+                                            <Link href={`/groups/${g.id}`}>
                                                 <Button variant="outline" size="sm">
-                                                    Manage
+                                                    View
                                                 </Button>
                                             </Link>
                                         )}
